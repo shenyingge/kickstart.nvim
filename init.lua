@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -122,7 +122,7 @@ end)
 vim.opt.breakindent = true
 
 -- Save undo history
-vim.opt.undofile = true
+vim.opt.undofile = false
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
@@ -432,7 +432,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>bb', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -471,6 +471,28 @@ require('lazy').setup({
         { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
       },
     },
+  },
+  {
+    'ahmedkhalf/project.nvim',
+    event = 'VeryLazy',
+    config = function()
+      require('project_nvim').setup {
+        detection_methods = { 'lsp', 'pattern' },
+        patterns = { '.git', '.venv', 'pyproject.toml', 'Makefile', 'package.json' },
+        exclude_dirs = {},
+        show_hidden = true,
+        silent_chdir = false,
+        scope_chdir = 'global',
+      }
+
+      -- 加载 Telescope 插件中的 project 扩展
+      require('telescope').load_extension 'projects'
+
+      -- 添加快捷键：<leader>pp 打开项目列表并跳转
+      vim.keymap.set('n', '<leader>pp', function()
+        require('telescope').extensions.projects.projects()
+      end, { desc = 'Project Picker' })
+    end,
   },
   {
     -- Main LSP Configuration
@@ -681,6 +703,8 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
         --
+        --
+        pyright = {},
 
         lua_ls = {
           -- cmd = { ... },
@@ -733,7 +757,32 @@ require('lazy').setup({
       }
     end,
   },
-
+  {
+    'nvimdev/dashboard-nvim',
+    event = 'UIEnter',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('dashboard').setup {
+        theme = 'hyper',
+        config = {
+          header = {
+            '⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿',
+            ' Welcome to Neovim ',
+            ' Powered by Kickstart + Dashboard.nvim ',
+          },
+          week_header = {
+            enable = true,
+          },
+          shortcut = {
+            { desc = ' Find File', group = 'Label', action = 'Telescope find_files', key = 'f' },
+            { desc = ' Grep Text', group = 'Label', action = 'Telescope live_grep', key = 'g' },
+            { desc = ' Recent', group = 'Label', action = 'Telescope oldfiles', key = 'r' },
+            { desc = ' File Tree', group = 'Label', action = 'Neotree toggle', key = 'e' },
+          },
+        },
+      }
+    end,
+  },
   { -- Autoformat
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
@@ -767,7 +816,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'isort', 'black' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -843,7 +892,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -892,7 +941,74 @@ require('lazy').setup({
       }
     end,
   },
+  {
+    'linux-cultist/venv-selector.nvim',
+    branch = 'regexp', -- ✨ 使用新版分支
+    dependencies = {
+      'neovim/nvim-lspconfig',
+      'nvim-telescope/telescope.nvim',
+    },
+    opts = {
+      name = { '.venv', 'venv', 'env' }, -- 项目内常见虚拟环境名称
+      search_workspace = true, -- 查找工作目录
+      fd_binary_name = 'fd', -- 如果是 Debian 系可换成 "fdfind"
+      python3 = vim.fn.exepath 'python3', -- 防止 spawn nil 报错
+      -- ✅ 启用 pipenv 支持
+      search = {
+        -- ✅ 查找项目目录下的 `.venv`, `venv`, `env`
+        local_project_venvs = {
+          command = [[fd /bin/python$ . --full-path -E /proc]],
+          pattern = [[\.?venv]],
+        },
 
+        -- ✅ 查找 pipenv 虚拟环境（默认放在 ~/.local/share/virtualenvs）
+        pipenv_venvs = {
+          command = [[fd /bin/python$ ~/.local/share/virtualenvs --full-path -E /proc]],
+          pattern = [[.*]],
+        },
+
+        -- ✅ 你可以加更多目录，比如 ~/Code, ~/Projects
+        custom_dev_venvs = {
+          command = [[fd /bin/python$ ~/Code ~/Programming --full-path -E /proc]],
+          pattern = [[.*]],
+        },
+      },
+    },
+    remember_last = true,
+    keys = {
+      { '<leader>vs', '<cmd>VenvSelect<cr>', desc = 'Select VirtualEnv' },
+    },
+  },
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    opts = {
+      label = {
+        current = true,
+        after = true,
+        before = false,
+      },
+      highlight = {
+        backdrop = false,
+        matches = true,
+      },
+      modes = {
+        char = {
+          enabled = false, -- ❌ 禁用 f/F/t/T
+        },
+      },
+    },
+    keys = {
+      {
+        '<leader><leader>s',
+        mode = { 'n', 'x', 'o' },
+        function()
+          require('flash').jump()
+        end,
+        desc = 'Flash jump',
+      },
+    },
+  },
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
@@ -980,6 +1096,11 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = true,
+  },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
@@ -992,10 +1113,10 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -1031,3 +1152,34 @@ require('lazy').setup({
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+--
+if vim.g.neovide then
+  vim.keymap.set('n', '<D-s>', ':w<CR>') -- Save
+  vim.keymap.set('v', '<D-c>', '"+y') -- Copy
+  vim.keymap.set('n', '<D-v>', '"+P') -- Paste normal mode
+  vim.keymap.set('v', '<D-v>', '"+P') -- Paste visual mode
+  vim.keymap.set('c', '<D-v>', '<C-R>+') -- Paste command mode
+  vim.keymap.set('i', '<D-v>', '<ESC>l"+Pli') -- Paste insert mode
+end
+
+-- Allow clipboard copy paste in neovim
+vim.api.nvim_set_keymap('', '<D-v>', '+p<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('!', '<D-v>', '<C-R>+', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('t', '<D-v>', '<C-R>+', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<D-v>', '<C-R>+', { noremap = true, silent = true })
+
+-- terminal
+vim.keymap.set('n', '<leader>th', function()
+  vim.cmd 'split | terminal'
+end, { desc = 'Open terminal' })
+
+vim.keymap.set('n', '<leader>tv', function()
+  vim.cmd 'vsplit | terminal'
+end, { desc = 'Open vertical terminal' })
+
+vim.keymap.set('n', '<leader>tt', '<cmd>ToggleTerm<cr>', { desc = 'Toggle terminal' })
+
+vim.opt.timeoutlen = 300
+
+vim.keymap.set('i', 'jk', '<Esc>', { desc = 'Exit insert mode with jk' })
+vim.keymap.set('n', '<leader>bd', ':bd<CR>', { desc = '[B]uffer [D]elete' })

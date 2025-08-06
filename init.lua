@@ -161,6 +161,11 @@ vim.opt.scrolloff = 10
 -- See `:help 'confirm'`
 vim.opt.confirm = true
 
+-- 在 init.lua 中设置默认值
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -353,7 +358,7 @@ require('lazy').setup({
   -- you do for a plugin at the top level, you can do for a dependency.
   --
   -- Use the `dependencies` key to specify the dependencies of a particular plugin
-
+  { 'Civitasv/cmake-tools.nvim' }, -- ⭐️ 支持 cmake 项目
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
@@ -423,15 +428,15 @@ require('lazy').setup({
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = '[S]earch [H]elp' })
+      vim.keymap.set('n', '<leader>fk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+      vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>fs', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>fw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
+      vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>fd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>fr', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader>f.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader>bb', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
@@ -445,7 +450,7 @@ require('lazy').setup({
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
-      vim.keymap.set('n', '<leader>s/', function()
+      vim.keymap.set('n', '<leader>f/', function()
         builtin.live_grep {
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
@@ -453,7 +458,7 @@ require('lazy').setup({
       end, { desc = '[S]earch [/] in Open Files' })
 
       -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set('n', '<leader>sn', function()
+      vim.keymap.set('n', '<leader>fn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
     end,
@@ -473,7 +478,7 @@ require('lazy').setup({
     },
   },
   {
-    'ahmedkhalf/project.nvim',
+    'Spelis/project.nvim',
     event = 'VeryLazy',
     config = function()
       require('project_nvim').setup {
@@ -763,21 +768,102 @@ require('lazy').setup({
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
       require('dashboard').setup {
-        theme = 'hyper',
+        theme = 'Hyper',
         config = {
           header = {
-            '⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿',
-            ' Welcome to Neovim ',
-            ' Powered by Kickstart + Dashboard.nvim ',
+            '       .__                         .__                              ',
+            '  _____|  |__   ____   ____ ___.__.|__| ____    ____   ____   ____  ',
+            ' /  ___/  |  \\_/ __ \\ /    <   |  ||  |/    \\  / ___\\ / ___\\_/ __ \\ ',
+            ' \\___ \\|   Y  \\  ___/|   |  \\___  ||  |   |  \\/ /_/  > /_/  >  ___/ ',
+            '/____  >___|  /\\___  >___|  / ____||__|___|  /\\___  /\\___  / \\___  >',
+            '     \\/     \\/     \\/     \\/\\/             \\//_____//_____/      \\/ ',
+            '                                                                           ',
+            '                                                                           ',
           },
           week_header = {
             enable = true,
           },
           shortcut = {
-            { desc = ' Find File', group = 'Label', action = 'Telescope find_files', key = 'f' },
-            { desc = ' Grep Text', group = 'Label', action = 'Telescope live_grep', key = 'g' },
-            { desc = ' Recent', group = 'Label', action = 'Telescope oldfiles', key = 'r' },
+            { desc = '󰱼 Find File', group = 'Label', action = 'Telescope find_files', key = 'f' },
+            -- { desc = '󰈔 New File', group = 'Label', action = 'ene | startinsert', key = 'e' },
+            { desc = '󰄉 Recent Files', group = 'Label', action = 'Telescope oldfiles', key = 'r' },
+            { desc = '󰊄 Find Text', group = 'Label', action = 'Telescope live_grep', key = 't' },
+            { desc = '󰒓 Configuration', group = 'Label', action = 'e ~/.config/nvim/init.lua', key = 'c' },
             { desc = ' File Tree', group = 'Label', action = 'Neotree toggle', key = 'e' },
+            { desc = '󰗼 Quit Neovim', group = 'Label', action = 'qa', key = 'q' },
+            -- { desc = ' Find File', group = 'Label', action = 'Telescope find_files', key = 'f' },
+            -- { desc = ' Grep Text', group = 'Label', action = 'Telescope live_grep', key = 'g' },
+            -- { desc = ' Recent', group = 'Label', action = 'Telescope oldfiles', key = 'r' },
+          },
+          center = {
+            {
+              icon = '󰱼 ',
+              icon_hl = 'title',
+              desc = string.format('%-35s', 'find file'),
+              desc_hl = 'string',
+              key = 'f',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'telescope find_files',
+            },
+            {
+              icon = '󰈔 ',
+              icon_hl = 'title',
+              desc = 'new file',
+              desc_hl = 'string',
+              key = 'e',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'ene | startinsert',
+            },
+            {
+              icon = '󰄉 ',
+              icon_hl = 'title',
+              desc = 'recent files',
+              desc_hl = 'string',
+              key = 'r',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'telescope oldfiles',
+            },
+            {
+              icon = '󰊄 ',
+              icon_hl = 'title',
+              desc = 'find text',
+              desc_hl = 'string',
+              key = 't',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'telescope live_grep',
+            },
+            {
+              icon = '󰒓 ',
+              icon_hl = 'title',
+              desc = 'configuration',
+              desc_hl = 'string',
+              key = 'c',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'e ~/.config/nvim/init.vim',
+            },
+            {
+              icon = '󰗼 ',
+              icon_hl = 'title',
+              desc = 'quit neovim',
+              desc_hl = 'string',
+              key = 'q',
+              key_hl = 'number',
+              key_format = ' %s',
+              action = 'qa',
+            },
+          },
+          footer = {
+            'Have a great coding session!',
+          },
+          layout = {},
+          vertical_center = true,
+          hide = {
+            autocmd = true,
           },
         },
       }
@@ -789,7 +875,7 @@ require('lazy').setup({
     cmd = { 'ConformInfo' },
     keys = {
       {
-        '<leader>f',
+        '<leader>fm',
         function()
           require('conform').format { async = true, lsp_format = 'fallback' }
         end,
@@ -1101,6 +1187,94 @@ require('lazy').setup({
     version = '*',
     config = true,
   },
+  {
+    'akinsho/bufferline.nvim',
+    version = '*',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('bufferline').setup {
+        options = {
+          diagnostics = 'nvim_lsp',
+          offsets = {
+            { filetype = 'NvimTree', text = 'File Explorer', separator = true },
+          },
+          separator_style = 'slant',
+          show_buffer_close_icons = false,
+          show_close_icon = false,
+        },
+      }
+    end,
+  },
+  {
+    'kylechui/nvim-surround',
+    event = 'VeryLazy',
+    config = function()
+      require('nvim-surround').setup {}
+    end,
+  },
+  -- {
+  --   'yetone/avante.nvim',
+  --   event = 'VeryLazy',
+  --   version = false, -- 永远不要将此值设置为 "*"！永远不要！
+  --   opts = {
+  --     -- 在此处添加任何选项
+  --     -- 例如
+  --     provider = 'claude',
+  --     claude = {
+  --       endpoint = 'https://api.anthropic.com',
+  --       model = 'claude-3-7-sonnet',
+  --     },
+  --     openai = {
+  --       endpoint = 'https://api.openai.com/v1',
+  --       model = 'gpt-4o', -- 您想要的模型（或使用 gpt-4o 等）
+  --       timeout = 30000, -- 超时时间（毫秒），增加此值以适应推理模型
+  --       temperature = 0,
+  --       max_tokens = 8192, -- 增加此值以包括推理模型的推理令牌
+  --       --reasoning_effort = "medium", -- low|medium|high，仅用于推理模型
+  --     },
+  --   },
+  --   -- 如果您想从源代码构建，请执行 `make BUILD_FROM_SOURCE=true`
+  --   build = 'make',
+  --   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- 对于 Windows
+  --   dependencies = {
+  --     'nvim-treesitter/nvim-treesitter',
+  --     'stevearc/dressing.nvim',
+  --     'nvim-lua/plenary.nvim',
+  --     'MunifTanjim/nui.nvim',
+  --     --- 以下依赖项是可选的，
+  --     'echasnovski/mini.pick', -- 用于文件选择器提供者 mini.pick
+  --     'nvim-telescope/telescope.nvim', -- 用于文件选择器提供者 telescope
+  --     'hrsh7th/nvim-cmp', -- avante 命令和提及的自动完成
+  --     'ibhagwan/fzf-lua', -- 用于文件选择器提供者 fzf
+  --     'nvim-tree/nvim-web-devicons', -- 或 echasnovski/mini.icons
+  --     'zbirenbaum/copilot.lua', -- 用于 providers='copilot'
+  --     {
+  --       -- 支持图像粘贴
+  --       'HakonHarnes/img-clip.nvim',
+  --       event = 'VeryLazy',
+  --       opts = {
+  --         -- 推荐设置
+  --         default = {
+  --           embed_image_as_base64 = false,
+  --           prompt_for_file_name = false,
+  --           drag_and_drop = {
+  --             insert_mode = true,
+  --           },
+  --           -- Windows 用户必需
+  --           use_absolute_path = true,
+  --         },
+  --       },
+  --     },
+  --     {
+  --       -- 如果您有 lazy=true，请确保正确设置
+  --       'MeanderingProgrammer/render-markdown.nvim',
+  --       opts = {
+  --         file_types = { 'markdown', 'Avante' },
+  --       },
+  --       ft = { 'markdown', 'Avante' },
+  --     },
+  --   },
+  -- },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
@@ -1160,6 +1334,7 @@ if vim.g.neovide then
   vim.keymap.set('v', '<D-v>', '"+P') -- Paste visual mode
   vim.keymap.set('c', '<D-v>', '<C-R>+') -- Paste command mode
   vim.keymap.set('i', '<D-v>', '<ESC>l"+Pli') -- Paste insert mode
+  vim.keymap.set('t', '<D-v>', [[<C-\><C-n>"+pi]], { desc = 'Paste clipboard in terminal' })
 end
 
 -- Allow clipboard copy paste in neovim
@@ -1183,3 +1358,35 @@ vim.opt.timeoutlen = 300
 
 vim.keymap.set('i', 'jk', '<Esc>', { desc = 'Exit insert mode with jk' })
 vim.keymap.set('n', '<leader>bd', ':bd<CR>', { desc = '[B]uffer [D]elete' })
+vim.api.nvim_clear_autocmds { pattern = '*.md' }
+
+-- 快速切换 buffer
+vim.keymap.set('n', '<Tab>', '<Cmd>BufferLineCycleNext<CR>', { desc = 'Next Buffer' })
+vim.keymap.set('n', '<S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', { desc = 'Last Buffer' })
+
+-- 关闭 buffer
+vim.keymap.set('n', '<leader>bd', '<Cmd>bd<CR>', { desc = 'Close Current Buffer' })
+vim.keymap.set('n', '<leader>bo', '<Cmd>%bd|e#|bd#<CR>', { desc = 'Close Other Buffers' })
+
+-- 按顺序跳转（bufferline 编号）
+vim.keymap.set('n', '<leader>1', '<Cmd>BufferLineGoToBuffer 1<CR>', { desc = 'Jump to Buffer 1' })
+vim.keymap.set('n', '<leader>2', '<Cmd>BufferLineGoToBuffer 2<CR>', { desc = 'Jump to Buffer 2' })
+-- 可依此类推
+
+---- 新建空 buffer
+vim.keymap.set('n', '<leader>bn', ':enew<CR>', { desc = 'New empty buffer' })
+
+-- 新建或打开指定文件
+vim.keymap.set('n', '<leader>be', ':edit ', { desc = 'Edit or create file' })
+
+-- 新建横向 split 并打开空 buffer
+vim.keymap.set('n', '<leader>bs', ':split | enew<CR>', { desc = 'New buffer in horizontal split' })
+
+-- 新建纵向 split 并打开空 buffer
+vim.keymap.set('n', '<leader>bv', ':vsplit | enew<CR>', { desc = 'New buffer in vertical split' })
+
+-- 关闭当前 buffer
+vim.keymap.set('n', '<leader>bd', '<cmd>bd<CR>', { desc = 'Close current buffer' })
+
+-- 关闭除当前之外的所有 buffer
+vim.keymap.set('n', '<leader>bo', '<cmd>%bd|e#|bd#<CR>', { desc = 'Close other buffers' })
